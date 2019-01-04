@@ -50,7 +50,7 @@ app.post("/restore" , async function(req, res){
         let productId = await restoreCheck(receipt , transactionId , secretKey)
         res.json({id:productId})
     }else{
-        res.json({id:-1});
+        res.json({id:'error'});
     }
 });
 
@@ -120,7 +120,7 @@ function restoreCheck (jsonData , transactionId) {
     let code = jsonData.status
     if (code != 0) {
         //Return apple err code 
-        return code
+        return 'error'
     }else{
         var isErr = true
         //Confirm the consistency of the receipt
@@ -137,7 +137,7 @@ function restoreCheck (jsonData , transactionId) {
             }
         }
         if (isErr) {
-            return -1
+            return 'error'
         }
     }
 }

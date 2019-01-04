@@ -63,7 +63,7 @@ async function registryCheck (receipt , transactionId , secretKey) {
 
     let stagingResult = await syncPostRequest(APPLE_BUY_CHECK_URL , jsonStr)
     let stagingCode = statusCheck(stagingResult , transactionId)
-    if (stagingCode != 21007) {
+    if (stagingCode != 'error') {
         return stagingCode
     }
     let sandboxResult = await syncPostRequest(APPLE_SANDBOX_CHECK_URL , jsonStr)

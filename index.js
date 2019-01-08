@@ -1,8 +1,10 @@
+const bodyParser = require('body-parser')
 const Express = require('express')
 const request = require('request')
-const app = Express()
 
-var server = app.listen(3000, function() {
+let app = Express()
+
+var server = app.listen(3030, function() {
     console.log("Node.js is listening to PORT:" + server.address().port);
 });
 
@@ -11,6 +13,12 @@ app.use(function(req, res , next) {
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 	next();
 });
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
 
 app.get("/", function(req, res){
     res.status(401).send('Error request');
@@ -25,13 +33,17 @@ app.get("/regi" , function(req, res){
 });
 
 app.post("/regi" , async function(req, res){
-    let receipt = req.body.base64Receipt
-    let transactionId = req.body.transactionID
-    let secretKey = req.body.secretKey
+    if (req.body) {
+        let receipt = req.body.base64Receipt
+        let transactionId = req.body.transactionID
+        let secretKey = req.body.secretKey
 
-    if (receipt && transactionId && secretKey) {
-        let resultCode = await registryCheck(receipt , transactionId , secretKey)
-        res.json({status:resultCode})
+        if (receipt && transactionId && secretKey) {
+            let resultCode = await registryCheck(receipt , transactionId , secretKey)
+            res.json({status:resultCode})
+        }else{
+            res.json({status:-1});
+        }
     }else{
         res.json({status:-1});
     }
@@ -42,15 +54,19 @@ app.get("/restore" , function(req, res){
 });
 
 app.post("/restore" , async function(req, res){
-    let receipt = req.body.base64Receipt
-    let transactionId = req.body.transactionID
-    let secretKey = req.body.secretKey
-
-    if (receipt && transactionId && secretKey) {
-        let productId = await restoreCheck(receipt , transactionId , secretKey)
-        res.json({id:productId})
+    res.setHeader('Content-Type', 'application/json');
+    if (req.body) {
+        let receipt = req.body.base64Receipt
+        let transactionId = req.body.transactionID
+        let secretKey = req.body.secretKey
+        if (receipt && transactionId && secretKey) {
+            let productId = await restoreCheck(receipt , transactionId , secretKey)
+            res.json({id:productId})
+        }else{
+            res.json({id:'error'})
+        }
     }else{
-        res.json({id:'error'});
+        res.json({id:'error'})
     }
 });
 
@@ -63,11 +79,11 @@ async function registryCheck (receipt , transactionId , secretKey) {
 
     let stagingResult = await syncPostRequest(APPLE_BUY_CHECK_URL , jsonStr)
     let stagingCode = statusCheck(stagingResult , transactionId)
-    if (stagingCode != 'error') {
+    if (stagingCode != 21007) {
         return stagingCode
     }
     let sandboxResult = await syncPostRequest(APPLE_SANDBOX_CHECK_URL , jsonStr)
-    let sandboxCode = statusCheck(stagingResult , transactionId)
+    let sandboxCode = statusCheck(sandboxResult , transactionId)
     return sandboxCode
 }
 
@@ -77,14 +93,13 @@ async function restoreCheck (receipt , transactionId , secretKey) {
     
     let requestData = {'receipt-data':receipt ,'password':secretKey}
     let jsonStr = JSON.stringify(requestData)
-
     let stagingResult = await syncPostRequest(APPLE_BUY_CHECK_URL , jsonStr)
-    let stagingCode = restoreCheck(stagingResult , transactionId)
-    if (stagingCode != 21007) {
+    let stagingCode = restoreCodeCheck(stagingResult , transactionId)
+    if (stagingCode != 'error') {
         return stagingCode
     }
     let sandboxResult = await syncPostRequest(APPLE_SANDBOX_CHECK_URL , jsonStr)
-    let sandboxCode = restoreCheck(stagingResult , transactionId)
+    let sandboxCode = restoreCodeCheck(sandboxResult , transactionId)
     return sandboxCode
 }
 
@@ -116,7 +131,7 @@ function statusCheck (jsonData , transactionId) {
     }
 }
 
-function restoreCheck (jsonData , transactionId) {
+function restoreCodeCheck (jsonData , transactionId) {
     let code = jsonData.status
     if (code != 0) {
         //Return apple err code 

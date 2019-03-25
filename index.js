@@ -2,9 +2,11 @@ const bodyParser = require('body-parser')
 const Express = require('express')
 const request = require('request')
 
+const PORT_NO = 3000
+
 let app = Express()
 
-var server = app.listen(3030, function() {
+var server = app.listen(PORT_NO, function() {
     console.log("Node.js is listening to PORT:" + server.address().port);
 });
 

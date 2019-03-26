@@ -14,6 +14,12 @@ $ cd ./hoge/hoge
 $ git clone https://github.com/MasamiYamate/YMTInAppPurchaseAPI.git
 ```
 
+run npm install
+
+```
+$ npm install
+```
+
 Publish "http: // localhost: 3000" through nginx reverse proxy.
 
 ```default.conf

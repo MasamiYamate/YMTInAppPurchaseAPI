@@ -4,9 +4,9 @@ const request = require('request')
 
 const PORT_NO = 3000
 
-let app = Express()
+const app = Express()
 
-var server = app.listen(PORT_NO, function() {
+let server = app.listen(PORT_NO, function() {
     console.log("Node.js is listening to PORT:" + server.address().port);
 });
 
